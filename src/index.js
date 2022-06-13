@@ -1,48 +1,84 @@
-// import _ from 'lodash';
+import * as tk from './utility.js';
 import './style.css';
 
-const loadTask = document.querySelector('.load-task');
-// const addTask = document.querySelector('.add-task');
-// const clearAll = document.querySelector('clear-all');
+const loadTask = document.querySelector('.todo-list');
+const form = document.querySelector('.todo-form');
+const clearList = document.querySelector('.clear');
 
-// let taskIndex = '';
+let taskIndex = 0;
 let taskDescription = '';
-let taskCompleted = '';
+const taskCompleted = '';
 
-const tasks = [
-  { index: 1, description: 'Cooking', completed: false },
-  { index: 2, description: 'Sleepig', completed: false },
-  { index: 3, description: 'Go for Shoppig', completed: true },
-  { index: 4, description: 'Go For Exercise', completed: false },
-];
-
-const loadPage = () => {
+const loadListElement = () => {
   const li = document.createElement('li');
-  li.classList.add(
-    'list-group-item',
-    'justify-content-between',
-    'd-flex',
-    // eslint-disable-next-line comma-dangle
-    'align-items-center'
-  );
+  li.classList.add('task');
   li.innerHTML = `<div class="form-check">
-<label class="form-check-label">
-  <input class="checkbox" type="checkbox" ${taskCompleted}/>
-  <span class="ps-3"
-    >${taskDescription}</span
-  >
-</label>
-</div>
-<i class="fa fa-trash-o"></i>`;
+  <input class="checkbox task-check" type="checkbox" ${taskCompleted}/>
+  <input class="desc todo-input" type="text" value= "${taskDescription}" id="${taskIndex}"/> 
+</div>`;
+
   loadTask.append(li);
 };
 
-tasks.forEach((task) => {
-  if (task.completed === true) {
-    taskCompleted = 'checked';
-  } else {
-    taskCompleted = '';
+const displayBook = () => {
+  const tasks = tk.getLocalTasks();
+  tasks.forEach((task) => {
+    taskDescription = task.desc;
+    taskIndex = task.id;
+
+    loadListElement();
+  });
+};
+
+form.addEventListener('submit', (e) => {
+  const addDesc = document.querySelector('.todo-input').value;
+  e.preventDefault();
+  tk.addLocalTask(addDesc);
+});
+
+displayBook();
+
+const checkBox = document.querySelectorAll('.checkbox');
+checkBox.forEach((item) => {
+  item.addEventListener('click', () => {
+    const tasks = tk.getLocalTasks();
+    tasks.forEach((elem) => {
+      tk.completedStatus(elem, item);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    });
+  });
+});
+
+const reLoad = () => {
+  const tasks = tk.getLocalTasks();
+  tasks.forEach((task) => {
+    task.completed = false;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  });
+};
+reLoad();
+
+clearList.addEventListener('click', () => {
+  let tasks = tk.getLocalTasks();
+  tasks = tasks.filter((elem) => elem.completed === false);
+  for (let j = 0; j < tasks.length; j += 1) {
+    tasks[j].id = j + 1;
   }
-  taskDescription = task.description;
-  loadPage();
+  reLoad();
+  document.location.reload();
+
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+});
+
+const desc = document.querySelectorAll('.desc');
+desc.forEach((description) => {
+  description.addEventListener('change', (e) => {
+    const tasks = tk.getLocalTasks();
+    tasks.forEach((item) => {
+      if (item.id === parseInt(e.target.id, 10)) {
+        item.desc = description.value;
+      }
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  });
 });
